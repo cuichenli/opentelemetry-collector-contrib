@@ -44,6 +44,16 @@ type MetricsConfig struct {
 	SqlserverPageOperationRate                  MetricConfig `mapstructure:"sqlserver.page.operation.rate"`
 	SqlserverPageSplitRate                      MetricConfig `mapstructure:"sqlserver.page.split.rate"`
 	SqlserverProcessesBlocked                   MetricConfig `mapstructure:"sqlserver.processes.blocked"`
+	SqlserverQueryAverageResponseTime           MetricConfig `mapstructure:"sqlserver.query.average_response_time"`
+	SqlserverQueryBufferCacheHitRatio           MetricConfig `mapstructure:"sqlserver.query.buffer_cache_hit_ratio"`
+	SqlserverQueryCPUTimeRatio                  MetricConfig `mapstructure:"sqlserver.query.cpu_time_ratio"`
+	SqlserverQueryExecutionsPerMin              MetricConfig `mapstructure:"sqlserver.query.executions_per_min"`
+	SqlserverQueryTotalCPUTime                  MetricConfig `mapstructure:"sqlserver.query.total_cpu_time"`
+	SqlserverQueryTotalElapsedTime              MetricConfig `mapstructure:"sqlserver.query.total_elapsed_time"`
+	SqlserverQueryTotalLogicalReads             MetricConfig `mapstructure:"sqlserver.query.total_logical_reads"`
+	SqlserverQueryTotalLogicalWrites            MetricConfig `mapstructure:"sqlserver.query.total_logical_writes"`
+	SqlserverQueryTotalPhysicalReads            MetricConfig `mapstructure:"sqlserver.query.total_physical_reads"`
+	SqlserverQueryTotalRows                     MetricConfig `mapstructure:"sqlserver.query.total_rows"`
 	SqlserverResourcePoolDiskThrottledReadRate  MetricConfig `mapstructure:"sqlserver.resource_pool.disk.throttled.read.rate"`
 	SqlserverResourcePoolDiskThrottledWriteRate MetricConfig `mapstructure:"sqlserver.resource_pool.disk.throttled.write.rate"`
 	SqlserverTransactionRate                    MetricConfig `mapstructure:"sqlserver.transaction.rate"`
@@ -106,6 +116,36 @@ func DefaultMetricsConfig() MetricsConfig {
 		},
 		SqlserverProcessesBlocked: MetricConfig{
 			Enabled: false,
+		},
+		SqlserverQueryAverageResponseTime: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryBufferCacheHitRatio: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryCPUTimeRatio: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryExecutionsPerMin: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalCPUTime: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalElapsedTime: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalLogicalReads: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalLogicalWrites: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalPhysicalReads: MetricConfig{
+			Enabled: true,
+		},
+		SqlserverQueryTotalRows: MetricConfig{
+			Enabled: true,
 		},
 		SqlserverResourcePoolDiskThrottledReadRate: MetricConfig{
 			Enabled: false,
@@ -171,9 +211,12 @@ func (rac *ResourceAttributeConfig) Unmarshal(parser *confmap.Conf) error {
 
 // ResourceAttributesConfig provides config for sqlserver resource attributes.
 type ResourceAttributesConfig struct {
-	SqlserverComputerName ResourceAttributeConfig `mapstructure:"sqlserver.computer.name"`
-	SqlserverDatabaseName ResourceAttributeConfig `mapstructure:"sqlserver.database.name"`
-	SqlserverInstanceName ResourceAttributeConfig `mapstructure:"sqlserver.instance.name"`
+	SqlserverComputerName  ResourceAttributeConfig `mapstructure:"sqlserver.computer.name"`
+	SqlserverDatabaseName  ResourceAttributeConfig `mapstructure:"sqlserver.database.name"`
+	SqlserverInstanceName  ResourceAttributeConfig `mapstructure:"sqlserver.instance.name"`
+	SqlserverQueryHash     ResourceAttributeConfig `mapstructure:"sqlserver.query.hash"`
+	SqlserverQueryText     ResourceAttributeConfig `mapstructure:"sqlserver.query.text"`
+	SqlserverQueryPlanHash ResourceAttributeConfig `mapstructure:"sqlserver.query_plan.hash"`
 }
 
 func DefaultResourceAttributesConfig() ResourceAttributesConfig {
@@ -185,6 +228,15 @@ func DefaultResourceAttributesConfig() ResourceAttributesConfig {
 			Enabled: true,
 		},
 		SqlserverInstanceName: ResourceAttributeConfig{
+			Enabled: false,
+		},
+		SqlserverQueryHash: ResourceAttributeConfig{
+			Enabled: false,
+		},
+		SqlserverQueryText: ResourceAttributeConfig{
+			Enabled: false,
+		},
+		SqlserverQueryPlanHash: ResourceAttributeConfig{
 			Enabled: false,
 		},
 	}

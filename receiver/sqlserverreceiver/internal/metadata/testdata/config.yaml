@@ -33,6 +33,26 @@ all_set:
       enabled: true
     sqlserver.processes.blocked:
       enabled: true
+    sqlserver.query.average_response_time:
+      enabled: true
+    sqlserver.query.buffer_cache_hit_ratio:
+      enabled: true
+    sqlserver.query.cpu_time_ratio:
+      enabled: true
+    sqlserver.query.executions_per_min:
+      enabled: true
+    sqlserver.query.total_cpu_time:
+      enabled: true
+    sqlserver.query.total_elapsed_time:
+      enabled: true
+    sqlserver.query.total_logical_reads:
+      enabled: true
+    sqlserver.query.total_logical_writes:
+      enabled: true
+    sqlserver.query.total_physical_reads:
+      enabled: true
+    sqlserver.query.total_rows:
+      enabled: true
     sqlserver.resource_pool.disk.throttled.read.rate:
       enabled: true
     sqlserver.resource_pool.disk.throttled.write.rate:
@@ -61,6 +81,12 @@ all_set:
     sqlserver.database.name:
       enabled: true
     sqlserver.instance.name:
+      enabled: true
+    sqlserver.query.hash:
+      enabled: true
+    sqlserver.query.text:
+      enabled: true
+    sqlserver.query_plan.hash:
       enabled: true
 none_set:
   metrics:
@@ -96,6 +122,26 @@ none_set:
       enabled: false
     sqlserver.processes.blocked:
       enabled: false
+    sqlserver.query.average_response_time:
+      enabled: false
+    sqlserver.query.buffer_cache_hit_ratio:
+      enabled: false
+    sqlserver.query.cpu_time_ratio:
+      enabled: false
+    sqlserver.query.executions_per_min:
+      enabled: false
+    sqlserver.query.total_cpu_time:
+      enabled: false
+    sqlserver.query.total_elapsed_time:
+      enabled: false
+    sqlserver.query.total_logical_reads:
+      enabled: false
+    sqlserver.query.total_logical_writes:
+      enabled: false
+    sqlserver.query.total_physical_reads:
+      enabled: false
+    sqlserver.query.total_rows:
+      enabled: false
     sqlserver.resource_pool.disk.throttled.read.rate:
       enabled: false
     sqlserver.resource_pool.disk.throttled.write.rate:
@@ -125,6 +171,12 @@ none_set:
       enabled: false
     sqlserver.instance.name:
       enabled: false
+    sqlserver.query.hash:
+      enabled: false
+    sqlserver.query.text:
+      enabled: false
+    sqlserver.query_plan.hash:
+      enabled: false
 filter_set_include:
   resource_attributes:
     sqlserver.computer.name:
@@ -136,6 +188,18 @@ filter_set_include:
       metrics_include:
         - regexp: ".*"
     sqlserver.instance.name:
+      enabled: true
+      metrics_include:
+        - regexp: ".*"
+    sqlserver.query.hash:
+      enabled: true
+      metrics_include:
+        - regexp: ".*"
+    sqlserver.query.text:
+      enabled: true
+      metrics_include:
+        - regexp: ".*"
+    sqlserver.query_plan.hash:
       enabled: true
       metrics_include:
         - regexp: ".*"
@@ -153,3 +217,15 @@ filter_set_exclude:
       enabled: true
       metrics_exclude:
         - strict: "sqlserver.instance.name-val"
+    sqlserver.query.hash:
+      enabled: true
+      metrics_exclude:
+        - strict: "sqlserver.query.hash-val"
+    sqlserver.query.text:
+      enabled: true
+      metrics_exclude:
+        - strict: "sqlserver.query.text-val"
+    sqlserver.query_plan.hash:
+      enabled: true
+      metrics_exclude:
+        - strict: "sqlserver.query_plan.hash-val"

@@ -118,6 +118,106 @@ This metric is only available when running on Windows.
 | ---- | ----------- | ---------- |
 | {pages}/s | Gauge | Double |
 
+### sqlserver.query.average_response_time
+
+The average response time taken by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | true |
+
+### sqlserver.query.buffer_cache_hit_ratio
+
+Ratio of logical vs physical reads
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| % | Gauge | Int |
+
+### sqlserver.query.cpu_time_ratio
+
+The ratio of total worker time to total elapsed time of the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| % | Gauge | Int |
+
+### sqlserver.query.executions_per_min
+
+Number of executions per minute, of the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| {executions} | Gauge | Int |
+
+### sqlserver.query.total_cpu_time
+
+The total CPU time taken by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | true |
+
+### sqlserver.query.total_elapsed_time
+
+The total time taken by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
+| ---- | ----------- | ---------- | ----------------------- | --------- |
+| s | Sum | Double | Cumulative | true |
+
+### sqlserver.query.total_logical_reads
+
+The total logical reads performed by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| {operations} | Gauge | Int |
+
+### sqlserver.query.total_logical_writes
+
+The total logical writes performed by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| {operations} | Gauge | Int |
+
+### sqlserver.query.total_physical_reads
+
+The total physical reads performed by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| {operations} | Gauge | Int |
+
+### sqlserver.query.total_rows
+
+The total rows returned by the query
+
+This metric is only available when the receiver is configured to directly connect to SQL Server.
+
+| Unit | Metric Type | Value Type |
+| ---- | ----------- | ---------- |
+| {rows} | Gauge | Int |
+
 ### sqlserver.transaction.rate
 
 Number of transactions started for the database (not including XTP-only transactions).
@@ -326,3 +426,6 @@ This metric is only available when the receiver is configured to directly connec
 | sqlserver.computer.name | The name of the SQL Server instance being monitored. | Any Str | false |
 | sqlserver.database.name | The name of the SQL Server database. | Any Str | true |
 | sqlserver.instance.name | The name of the SQL Server instance being monitored. | Any Str | false |
+| sqlserver.query.hash | Hash of the query | Any Str | false |
+| sqlserver.query.text | Query text | Any Str | false |
+| sqlserver.query_plan.hash | Hash of the query plan | Any Str | false |

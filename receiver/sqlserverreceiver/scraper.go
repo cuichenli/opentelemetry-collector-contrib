@@ -6,6 +6,7 @@ package sqlserverreceiver // import "github.com/open-telemetry/opentelemetry-col
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
@@ -84,6 +85,8 @@ func (s *sqlServerScraperHelper) Scrape(ctx context.Context) (pmetric.Metrics, e
 	var err error
 
 	switch s.sqlQuery {
+	case getSQLServerQueryMetricsQuery(s.instanceName):
+		err = s.recordQueryMetrics(ctx)
 	case getSQLServerDatabaseIOQuery(s.instanceName):
 		err = s.recordDatabaseIOMetrics(ctx)
 	case getSQLServerPerformanceCounterQuery(s.instanceName):
@@ -297,6 +300,96 @@ func (s *sqlServerScraperHelper) recordDatabaseStatusMetrics(ctx context.Context
 		errs = append(errs, s.mb.RecordSqlserverDatabaseCountDataPoint(now, row[dbOffline], metadata.AttributeDatabaseStatusOffline))
 
 		s.mb.EmitForResource(metadata.WithResource(rb.Emit()))
+	}
+
+	return errors.Join(errs...)
+}
+
+func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
+	// Constants are the column names of the database status
+	const totalElapsedTime = "TotalElapsedTime"
+	const rowsReturned = "RowsReturned"
+	const avgResponseTime = "AvgResponseTime"
+	const totalCPUTime = "TotalCPUTime"
+	const queryHash = "QueryHash"
+	const queryPlanHash = "QueryPlanHash"
+	const logicalReads = "LogicalReads"
+	const logicalWrites = "LogicalWrites"
+	const physicalReads = "PhysicalReads"
+	const bufferCacheHitRatio = "BufferCacheHitRatio"
+	const cpuTimeRatio = "CPUTimeRatio"
+	const executionsPerMin = "ExecutionsPerMin"
+	const queryText = "queryText"
+	rows, err := s.client.QueryRows(ctx)
+
+	if err != nil {
+		if errors.Is(err, sqlquery.ErrNullValueWarning) {
+			s.logger.Warn("problems encountered getting metric rows", zap.Error(err))
+		} else {
+			return fmt.Errorf("sqlServerScraperHelper failed getting metric rows: %w", err)
+		}
+
+	}
+	var errs []error
+	for _, row := range rows {
+
+		rb := s.mb.NewResourceBuilder()
+		rb.SetSqlserverComputerName(row[computerNameKey])
+		rb.SetSqlserverInstanceName(row[instanceNameKey])
+		rb.SetSqlserverQueryHash(hex.EncodeToString([]byte(row[queryHash])))
+		rb.SetSqlserverQueryPlanHash(hex.EncodeToString([]byte(row[queryPlanHash])))
+		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, row[queryPlanHash], row[queryHash]))
+
+		timeStamp := pcommon.NewTimestampFromTime(time.Now())
+
+		s.mb.RecordSqlserverQueryExecutionsPerMinDataPoint(timeStamp, row[executionsPerMin])
+		s.mb.RecordSqlserverQueryTotalRowsDataPoint(timeStamp, row[rowsReturned])
+		s.mb.RecordSqlserverQueryTotalLogicalReadsDataPoint(timeStamp, row[logicalReads])
+		s.mb.RecordSqlserverQueryTotalLogicalWritesDataPoint(timeStamp, row[logicalWrites])
+		s.mb.RecordSqlserverQueryTotalPhysicalReadsDataPoint(timeStamp, row[physicalReads])
+
+		elapsedTime, err := strconv.ParseFloat(row[totalElapsedTime], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+		} else {
+			s.mb.RecordSqlserverQueryTotalElapsedTimeDataPoint(timeStamp, elapsedTime)
+		}
+
+		cpuTime, err := strconv.ParseFloat(row[totalCPUTime], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+		} else {
+			s.mb.RecordSqlserverQueryTotalCPUTimeDataPoint(timeStamp, cpuTime)
+		}
+
+		avgResTime, err := strconv.ParseFloat(row[avgResponseTime], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+		} else {
+			s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, avgResTime)
+		}
+
+		bufferCacheHitRatio, err := strconv.ParseFloat(row[bufferCacheHitRatio], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+		}
+		s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, bufferCacheHitRatio)
+		s.logger.Info(fmt.Sprintf("BufferCacheHitRatio: %v", bufferCacheHitRatio))
+
+		s.mb.RecordSqlserverQueryTotalCPUTimeDataPoint(timeStamp, bufferCacheHitRatio)
+
+		cpuTimeRatio, err := strconv.ParseFloat(row[cpuTimeRatio], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+		} else {
+			s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, cpuTimeRatio)
+			s.logger.Info(fmt.Sprintf("cpuTimetRatio: %v", cpuTimeRatio))
+		}
+
+		//s.logger.Info("Recorded metrics...")
+		var resource = rb.Emit()
+		s.mb.EmitForResource(metadata.WithResource(resource))
+
 	}
 
 	return errors.Join(errs...)

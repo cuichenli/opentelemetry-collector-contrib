@@ -59,6 +59,7 @@ func setupQueries(cfg *Config) []string {
 	if cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseCount.Enabled {
 		queries = append(queries, getSQLServerPropertiesQuery(cfg.InstanceName))
 	}
+	queries = append(queries, getSQLServerQueryMetricsQuery(cfg.InstanceName))
 
 	return queries
 }
