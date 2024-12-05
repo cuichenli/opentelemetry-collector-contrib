@@ -25,6 +25,8 @@ type Config struct {
 	Port     uint                `mapstructure:"port"`
 	Server   string              `mapstructure:"server"`
 	Username string              `mapstructure:"username"`
+	Granularity string           `mapstructure:"granularity"`
+	TopQueryCount string         `mapstructure:"topQueryCount"`
 }
 
 func (cfg *Config) Validate() error {

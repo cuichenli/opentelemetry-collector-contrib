@@ -30,6 +30,8 @@ const (
 type sqlServerScraperHelper struct {
 	id                 component.ID
 	sqlQuery           string
+	topQueryCount      string
+	granularity        string
 	instanceName       string
 	scrapeCfg          scraperhelper.ControllerConfig
 	clientProviderFunc sqlquery.ClientProviderFunc
@@ -45,6 +47,8 @@ var _ scraperhelper.Scraper = (*sqlServerScraperHelper)(nil)
 
 func newSQLServerScraper(id component.ID,
 	query string,
+	topQueryCount string,
+	granularity string,
 	instanceName string,
 	scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger,
@@ -56,6 +60,8 @@ func newSQLServerScraper(id component.ID,
 	return &sqlServerScraperHelper{
 		id:                 id,
 		sqlQuery:           query,
+		topQueryCount:      topQueryCount,
+		granularity:        granularity,
 		instanceName:       instanceName,
 		scrapeCfg:          scrapeCfg,
 		logger:             logger,
@@ -85,7 +91,7 @@ func (s *sqlServerScraperHelper) Scrape(ctx context.Context) (pmetric.Metrics, e
 	var err error
 
 	switch s.sqlQuery {
-	case getSQLServerQueryMetricsQuery(s.instanceName):
+	case getSQLServerQueryMetricsQuery(s.instanceName, s.topQueryCount, s.granularity):
 		err = s.recordQueryMetrics(ctx)
 	case getSQLServerDatabaseIOQuery(s.instanceName):
 		err = s.recordDatabaseIOMetrics(ctx)
@@ -313,11 +319,10 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 	const totalCPUTime = "TotalCPUTime"
 	const queryHash = "QueryHash"
 	const queryPlanHash = "QueryPlanHash"
+	const sqlQueryText = "SQLQueryText"
 	const logicalReads = "LogicalReads"
 	const logicalWrites = "LogicalWrites"
 	const physicalReads = "PhysicalReads"
-	const bufferCacheHitRatio = "BufferCacheHitRatio"
-	const cpuTimeRatio = "CPUTimeRatio"
 	const executionsPerMin = "ExecutionsPerMin"
 	const queryText = "queryText"
 	rows, err := s.client.QueryRows(ctx)
@@ -338,7 +343,8 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		rb.SetSqlserverInstanceName(row[instanceNameKey])
 		rb.SetSqlserverQueryHash(hex.EncodeToString([]byte(row[queryHash])))
 		rb.SetSqlserverQueryPlanHash(hex.EncodeToString([]byte(row[queryPlanHash])))
-		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, row[queryPlanHash], row[queryHash]))
+		rb.SetSqlserverQueryText(row[sqlQueryText])
+		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, hex.EncodeToString([]byte(row[queryPlanHash])), hex.EncodeToString([]byte(row[queryHash]))))
 
 		timeStamp := pcommon.NewTimestampFromTime(time.Now())
 
@@ -369,24 +375,6 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 			s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, avgResTime)
 		}
 
-		bufferCacheHitRatio, err := strconv.ParseFloat(row[bufferCacheHitRatio], 64)
-		if err != nil {
-			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
-		}
-		s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, bufferCacheHitRatio)
-		s.logger.Info(fmt.Sprintf("BufferCacheHitRatio: %v", bufferCacheHitRatio))
-
-		s.mb.RecordSqlserverQueryTotalCPUTimeDataPoint(timeStamp, bufferCacheHitRatio)
-
-		cpuTimeRatio, err := strconv.ParseFloat(row[cpuTimeRatio], 64)
-		if err != nil {
-			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
-		} else {
-			s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, cpuTimeRatio)
-			s.logger.Info(fmt.Sprintf("cpuTimetRatio: %v", cpuTimeRatio))
-		}
-
-		//s.logger.Info("Recorded metrics...")
 		var resource = rb.Emit()
 		s.mb.EmitForResource(metadata.WithResource(resource))
 

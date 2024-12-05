@@ -265,7 +265,7 @@ IF CAST(SERVERPROPERTY('ProductVersion') AS varchar(50)) >= '10.50.2500.0'
 
 SET @SqlStatement = '
 DECLARE @ForceEncryption INT
-    DECLARE @DynamicportNo NVARCHAR(50);
+DECLARE @DynamicportNo NVARCHAR(50);
 DECLARE @StaticportNo NVARCHAR(50);
 
 EXEC [xp_instance_regread]
@@ -337,32 +337,28 @@ func getSQLServerPropertiesQuery(instanceName string) string {
 }
 
 const sqlQueryMetrics = `
-DECLARE @StartTime DATETIME = '2024-11-24 00:00:00'; -- span start
-DECLARE @EndTime DATETIME = '2024-11-24 23:59:59'; -- span end
-SELECT TOP 200      -- make the Top 200 configurable
+%s
+%s
+SELECT TOP (@topNValue)
 REPLACE(@@SERVERNAME,'\',':') AS [sql_instance],
-+HOST_NAME() AS [computer_name],
-+@@SERVICENAME AS ServiceName,
-qs.query_hash,                                                                                  -- hash of sys.dm_exec_query_text()
-qs.query_plan_hash,                                                                         -- hash of sys.dm_exec_query_plan()
+HOST_NAME() AS [computer_name],
+@@SERVICENAME AS ServiceName,
+qs.query_hash AS QueryHash,
+qs.query_plan_hash AS QueryPlanHash,
 SUBSTRING(SUBSTRING(ST.text, (qs.statement_start_offset/2) + 1,
 ((CASE statement_end_offset WHEN -1 THEN DATALENGTH(ST.text)
 ELSE QS.statement_end_offset END- QS.statement_start_offset)/2) + 1),1, 100) AS SQLQueryText,
-COUNT(*) / DATEDIFF(MINUTE, @StartTime, @EndTime) AS ExecutionsPerMin,
-SUM(qs.total_elapsed_time) AS TotalElapsedTime,                                                                                 -- total elapsed time
-SUM(qs.total_worker_time) AS TotalCPUTime,                                                                                         -- total CPU time
-SUM(qs.total_elapsed_time) / SUM(qs.execution_count) AS AvgResponseTime,                                 -- average response time
-SUM(qs.total_logical_reads) AS LogicalReads,                                                                                         -- total logical reads
-SUM(qs.total_physical_reads) AS PhysicalReads,                                                                                    -- total physical reads
-SUM(qs.total_logical_writes) AS LogicalWrites,                                                                                        -- total logical writes
-SUM(qs.total_rows) AS RowsReturned,                                                                                                     -- total rows returned
-ISNULL(SUM(qs.total_logical_reads) / NULLIF(SUM(qs.total_physical_reads), 0), 0) AS BufferCacheHitRatio,  -- ratio of buffer cache hits
-SUM(qs.total_worker_time) / SUM(qs.total_elapsed_time) AS CPUTimeRatio                                     -- cpu time ratio
-FROM
-sys.dm_exec_query_stats AS qs
+COUNT(*) / CAST(DATEDIFF(MINUTE, DATEADD(SECOND, @granularity, GETDATE()), GETDATE()) AS FLOAT) AS ExecutionsPerMin,
+SUM(qs.total_elapsed_time) AS TotalElapsedTime,
+SUM(qs.total_worker_time) AS TotalCPUTime,
+SUM(qs.total_elapsed_time) / SUM(qs.execution_count) AS AvgResponseTime,
+SUM(qs.total_logical_reads) AS LogicalReads,
+SUM(qs.total_physical_reads) AS PhysicalReads,
+SUM(qs.total_logical_writes) AS LogicalWrites,
+SUM(qs.total_rows) AS RowsReturned
+FROM sys.dm_exec_query_stats AS qs
 CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) AS st
-WHERE
-qs.last_execution_time BETWEEN @StartTime AND @EndTime
+WHERE qs.last_execution_time BETWEEN DATEADD(SECOND, @granularity, GETDATE()) AND GETDATE() %s
 GROUP BY
 qs.query_hash,
 qs.query_plan_hash,
@@ -370,16 +366,35 @@ SUBSTRING(ST.text, (qs.statement_start_offset/2) + 1,
 ((CASE statement_end_offset WHEN -1 THEN DATALENGTH(ST.text)
 ELSE QS.statement_end_offset END - QS.statement_start_offset)/2) + 1)
 ORDER BY
-TotalElapsedTime DESC;
-%s`
+TotalElapsedTime DESC;`
 
-func getSQLServerQueryMetricsQuery(instanceName string) string {
+const granularityDeclaration = `DECLARE @granularity INT = -%s;`
+const topNValueDeclaration = `DECLARE @topNValue INT = %s;`
 
-	if instanceName != "" {
-		whereClause := fmt.Sprintf("WHERE @@SERVERNAME = ''%s''", instanceName)
-		return fmt.Sprintf(sqlQueryMetrics, whereClause)
+func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, granularity string) string {
+
+	var topQueryCountStatement string
+	var granularityStatement string
+	var instanceNameClause string
+
+
+    if topQueryCount != "" {
+		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, topQueryCount)
+	} else {
+		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, "200")
 	}
 
-	return fmt.Sprintf(sqlQueryMetrics, "")
+	if granularity != "" {
+		granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
+	} else {
+		granularityStatement = fmt.Sprintf(granularityDeclaration, "-10000")
+	}
 
+	if instanceName != "" {
+		instanceNameClause = fmt.Sprintf("AND @@SERVERNAME = ''%s''", instanceName)
+	} else {
+		instanceNameClause = ""
+	}
+
+	return fmt.Sprintf(sqlQueryMetrics, granularityStatement, topQueryCountStatement, instanceNameClause)
 }

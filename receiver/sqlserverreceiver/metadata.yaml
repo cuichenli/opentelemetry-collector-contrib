@@ -101,7 +101,9 @@ metrics:
     enabled: true
     description: Pages found in the buffer pool without having to read from disk.
     unit: "%"
-    gauge:
+    sum:
+      monotonic: true
+      aggregation_temporality: cumulative
       value_type: double
   sqlserver.page.life_expectancy:
     enabled: true
@@ -315,7 +317,7 @@ metrics:
     description: Ratio of logical vs physical reads
     unit: "%"
     gauge:
-      value_type: int
+      value_type: double
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
   sqlserver.query.total_logical_reads:
     enabled: true
@@ -344,9 +346,9 @@ metrics:
   sqlserver.query.cpu_time_ratio:
     enabled: true
     description: The ratio of total worker time to total elapsed time of the query
-    unit: "%"
+    unit: "{ratio}"
     gauge:
-      value_type: int
+      value_type: double
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
 
 tests:
