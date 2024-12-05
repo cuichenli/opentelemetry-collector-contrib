@@ -128,26 +128,6 @@ This metric is only available when the receiver is configured to directly connec
 | ---- | ----------- | ---------- | ----------------------- | --------- |
 | s | Sum | Double | Cumulative | true |
 
-### sqlserver.query.buffer_cache_hit_ratio
-
-Ratio of logical vs physical reads
-
-This metric is only available when the receiver is configured to directly connect to SQL Server.
-
-| Unit | Metric Type | Value Type |
-| ---- | ----------- | ---------- |
-| % | Gauge | Int |
-
-### sqlserver.query.cpu_time_ratio
-
-The ratio of total worker time to total elapsed time of the query
-
-This metric is only available when the receiver is configured to directly connect to SQL Server.
-
-| Unit | Metric Type | Value Type |
-| ---- | ----------- | ---------- |
-| % | Gauge | Int |
-
 ### sqlserver.query.executions_per_min
 
 Number of executions per minute, of the query
