@@ -342,7 +342,6 @@ const sqlQueryMetrics = `
 SELECT TOP (@topNValue)
 REPLACE(@@SERVERNAME,'\',':') AS [sql_instance],
 HOST_NAME() AS [computer_name],
-@@SERVICENAME AS ServiceName,
 qs.query_hash AS QueryHash,
 qs.query_plan_hash AS QueryPlanHash,
 SUBSTRING(SUBSTRING(ST.text, (qs.statement_start_offset/2) + 1,
