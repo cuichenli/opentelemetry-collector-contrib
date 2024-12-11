@@ -386,7 +386,7 @@ func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, gr
 	if granularity != "" {
 		granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
 	} else {
-		granularityStatement = fmt.Sprintf(granularityDeclaration, "10000")
+		granularityStatement = fmt.Sprintf(granularityDeclaration, "10")
 	}
 
 	if instanceName != "" {
