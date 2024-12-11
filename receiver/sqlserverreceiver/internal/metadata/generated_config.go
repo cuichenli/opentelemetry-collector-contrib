@@ -45,8 +45,6 @@ type MetricsConfig struct {
 	SqlserverPageSplitRate                      MetricConfig `mapstructure:"sqlserver.page.split.rate"`
 	SqlserverProcessesBlocked                   MetricConfig `mapstructure:"sqlserver.processes.blocked"`
 	SqlserverQueryAverageResponseTime           MetricConfig `mapstructure:"sqlserver.query.average_response_time"`
-	SqlserverQueryBufferCacheHitRatio           MetricConfig `mapstructure:"sqlserver.query.buffer_cache_hit_ratio"`
-	SqlserverQueryCPUTimeRatio                  MetricConfig `mapstructure:"sqlserver.query.cpu_time_ratio"`
 	SqlserverQueryExecutionsPerMin              MetricConfig `mapstructure:"sqlserver.query.executions_per_min"`
 	SqlserverQueryTotalCPUTime                  MetricConfig `mapstructure:"sqlserver.query.total_cpu_time"`
 	SqlserverQueryTotalElapsedTime              MetricConfig `mapstructure:"sqlserver.query.total_elapsed_time"`
@@ -118,12 +116,6 @@ func DefaultMetricsConfig() MetricsConfig {
 			Enabled: false,
 		},
 		SqlserverQueryAverageResponseTime: MetricConfig{
-			Enabled: true,
-		},
-		SqlserverQueryBufferCacheHitRatio: MetricConfig{
-			Enabled: true,
-		},
-		SqlserverQueryCPUTimeRatio: MetricConfig{
 			Enabled: true,
 		},
 		SqlserverQueryExecutionsPerMin: MetricConfig{

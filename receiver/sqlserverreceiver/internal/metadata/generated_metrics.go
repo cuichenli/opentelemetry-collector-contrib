@@ -968,104 +968,6 @@ func newMetricSqlserverQueryAverageResponseTime(cfg MetricConfig) metricSqlserve
 	return m
 }
 
-type metricSqlserverQueryBufferCacheHitRatio struct {
-	data     pmetric.Metric // data buffer for generated metric.
-	config   MetricConfig   // metric config provided by user.
-	capacity int            // max observed number of data points added to the metric.
-}
-
-// init fills sqlserver.query.buffer_cache_hit_ratio metric with initial data.
-func (m *metricSqlserverQueryBufferCacheHitRatio) init() {
-	m.data.SetName("sqlserver.query.buffer_cache_hit_ratio")
-	m.data.SetDescription("Ratio of logical vs physical reads")
-	m.data.SetUnit("%")
-	m.data.SetEmptyGauge()
-}
-
-func (m *metricSqlserverQueryBufferCacheHitRatio) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64) {
-	if !m.config.Enabled {
-		return
-	}
-	dp := m.data.Gauge().DataPoints().AppendEmpty()
-	dp.SetStartTimestamp(start)
-	dp.SetTimestamp(ts)
-	dp.SetIntValue(val)
-}
-
-// updateCapacity saves max length of data point slices that will be used for the slice capacity.
-func (m *metricSqlserverQueryBufferCacheHitRatio) updateCapacity() {
-	if m.data.Gauge().DataPoints().Len() > m.capacity {
-		m.capacity = m.data.Gauge().DataPoints().Len()
-	}
-}
-
-// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
-func (m *metricSqlserverQueryBufferCacheHitRatio) emit(metrics pmetric.MetricSlice) {
-	if m.config.Enabled && m.data.Gauge().DataPoints().Len() > 0 {
-		m.updateCapacity()
-		m.data.MoveTo(metrics.AppendEmpty())
-		m.init()
-	}
-}
-
-func newMetricSqlserverQueryBufferCacheHitRatio(cfg MetricConfig) metricSqlserverQueryBufferCacheHitRatio {
-	m := metricSqlserverQueryBufferCacheHitRatio{config: cfg}
-	if cfg.Enabled {
-		m.data = pmetric.NewMetric()
-		m.init()
-	}
-	return m
-}
-
-type metricSqlserverQueryCPUTimeRatio struct {
-	data     pmetric.Metric // data buffer for generated metric.
-	config   MetricConfig   // metric config provided by user.
-	capacity int            // max observed number of data points added to the metric.
-}
-
-// init fills sqlserver.query.cpu_time_ratio metric with initial data.
-func (m *metricSqlserverQueryCPUTimeRatio) init() {
-	m.data.SetName("sqlserver.query.cpu_time_ratio")
-	m.data.SetDescription("The ratio of total worker time to total elapsed time of the query")
-	m.data.SetUnit("%")
-	m.data.SetEmptyGauge()
-}
-
-func (m *metricSqlserverQueryCPUTimeRatio) recordDataPoint(start pcommon.Timestamp, ts pcommon.Timestamp, val int64) {
-	if !m.config.Enabled {
-		return
-	}
-	dp := m.data.Gauge().DataPoints().AppendEmpty()
-	dp.SetStartTimestamp(start)
-	dp.SetTimestamp(ts)
-	dp.SetIntValue(val)
-}
-
-// updateCapacity saves max length of data point slices that will be used for the slice capacity.
-func (m *metricSqlserverQueryCPUTimeRatio) updateCapacity() {
-	if m.data.Gauge().DataPoints().Len() > m.capacity {
-		m.capacity = m.data.Gauge().DataPoints().Len()
-	}
-}
-
-// emit appends recorded metric data to a metrics slice and prepares it for recording another set of data points.
-func (m *metricSqlserverQueryCPUTimeRatio) emit(metrics pmetric.MetricSlice) {
-	if m.config.Enabled && m.data.Gauge().DataPoints().Len() > 0 {
-		m.updateCapacity()
-		m.data.MoveTo(metrics.AppendEmpty())
-		m.init()
-	}
-}
-
-func newMetricSqlserverQueryCPUTimeRatio(cfg MetricConfig) metricSqlserverQueryCPUTimeRatio {
-	m := metricSqlserverQueryCPUTimeRatio{config: cfg}
-	if cfg.Enabled {
-		m.data = pmetric.NewMetric()
-		m.init()
-	}
-	return m
-}
-
 type metricSqlserverQueryExecutionsPerMin struct {
 	data     pmetric.Metric // data buffer for generated metric.
 	config   MetricConfig   // metric config provided by user.
@@ -1983,8 +1885,6 @@ type MetricsBuilder struct {
 	metricSqlserverPageSplitRate                      metricSqlserverPageSplitRate
 	metricSqlserverProcessesBlocked                   metricSqlserverProcessesBlocked
 	metricSqlserverQueryAverageResponseTime           metricSqlserverQueryAverageResponseTime
-	metricSqlserverQueryBufferCacheHitRatio           metricSqlserverQueryBufferCacheHitRatio
-	metricSqlserverQueryCPUTimeRatio                  metricSqlserverQueryCPUTimeRatio
 	metricSqlserverQueryExecutionsPerMin              metricSqlserverQueryExecutionsPerMin
 	metricSqlserverQueryTotalCPUTime                  metricSqlserverQueryTotalCPUTime
 	metricSqlserverQueryTotalElapsedTime              metricSqlserverQueryTotalElapsedTime
@@ -2046,8 +1946,6 @@ func NewMetricsBuilder(mbc MetricsBuilderConfig, settings receiver.Settings, opt
 		metricSqlserverPageSplitRate:                      newMetricSqlserverPageSplitRate(mbc.Metrics.SqlserverPageSplitRate),
 		metricSqlserverProcessesBlocked:                   newMetricSqlserverProcessesBlocked(mbc.Metrics.SqlserverProcessesBlocked),
 		metricSqlserverQueryAverageResponseTime:           newMetricSqlserverQueryAverageResponseTime(mbc.Metrics.SqlserverQueryAverageResponseTime),
-		metricSqlserverQueryBufferCacheHitRatio:           newMetricSqlserverQueryBufferCacheHitRatio(mbc.Metrics.SqlserverQueryBufferCacheHitRatio),
-		metricSqlserverQueryCPUTimeRatio:                  newMetricSqlserverQueryCPUTimeRatio(mbc.Metrics.SqlserverQueryCPUTimeRatio),
 		metricSqlserverQueryExecutionsPerMin:              newMetricSqlserverQueryExecutionsPerMin(mbc.Metrics.SqlserverQueryExecutionsPerMin),
 		metricSqlserverQueryTotalCPUTime:                  newMetricSqlserverQueryTotalCPUTime(mbc.Metrics.SqlserverQueryTotalCPUTime),
 		metricSqlserverQueryTotalElapsedTime:              newMetricSqlserverQueryTotalElapsedTime(mbc.Metrics.SqlserverQueryTotalElapsedTime),
@@ -2191,8 +2089,6 @@ func (mb *MetricsBuilder) EmitForResource(options ...ResourceMetricsOption) {
 	mb.metricSqlserverPageSplitRate.emit(ils.Metrics())
 	mb.metricSqlserverProcessesBlocked.emit(ils.Metrics())
 	mb.metricSqlserverQueryAverageResponseTime.emit(ils.Metrics())
-	mb.metricSqlserverQueryBufferCacheHitRatio.emit(ils.Metrics())
-	mb.metricSqlserverQueryCPUTimeRatio.emit(ils.Metrics())
 	mb.metricSqlserverQueryExecutionsPerMin.emit(ils.Metrics())
 	mb.metricSqlserverQueryTotalCPUTime.emit(ils.Metrics())
 	mb.metricSqlserverQueryTotalElapsedTime.emit(ils.Metrics())
@@ -2345,16 +2241,6 @@ func (mb *MetricsBuilder) RecordSqlserverProcessesBlockedDataPoint(ts pcommon.Ti
 // RecordSqlserverQueryAverageResponseTimeDataPoint adds a data point to sqlserver.query.average_response_time metric.
 func (mb *MetricsBuilder) RecordSqlserverQueryAverageResponseTimeDataPoint(ts pcommon.Timestamp, val float64) {
 	mb.metricSqlserverQueryAverageResponseTime.recordDataPoint(mb.startTime, ts, val)
-}
-
-// RecordSqlserverQueryBufferCacheHitRatioDataPoint adds a data point to sqlserver.query.buffer_cache_hit_ratio metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryBufferCacheHitRatioDataPoint(ts pcommon.Timestamp, val int64) {
-	mb.metricSqlserverQueryBufferCacheHitRatio.recordDataPoint(mb.startTime, ts, val)
-}
-
-// RecordSqlserverQueryCPUTimeRatioDataPoint adds a data point to sqlserver.query.cpu_time_ratio metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryCPUTimeRatioDataPoint(ts pcommon.Timestamp, val int64) {
-	mb.metricSqlserverQueryCPUTimeRatio.recordDataPoint(mb.startTime, ts, val)
 }
 
 // RecordSqlserverQueryExecutionsPerMinDataPoint adds a data point to sqlserver.query.executions_per_min metric.

@@ -133,14 +133,6 @@ func TestMetricsBuilder(t *testing.T) {
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSqlserverQueryBufferCacheHitRatioDataPoint(ts, 1)
-
-			defaultMetricsCount++
-			allMetricsCount++
-			mb.RecordSqlserverQueryCPUTimeRatioDataPoint(ts, 1)
-
-			defaultMetricsCount++
-			allMetricsCount++
 			mb.RecordSqlserverQueryExecutionsPerMinDataPoint(ts, "1")
 
 			defaultMetricsCount++
@@ -492,30 +484,6 @@ func TestMetricsBuilder(t *testing.T) {
 					assert.Equal(t, ts, dp.Timestamp())
 					assert.Equal(t, pmetric.NumberDataPointValueTypeDouble, dp.ValueType())
 					assert.InDelta(t, float64(1), dp.DoubleValue(), 0.01)
-				case "sqlserver.query.buffer_cache_hit_ratio":
-					assert.False(t, validatedMetrics["sqlserver.query.buffer_cache_hit_ratio"], "Found a duplicate in the metrics slice: sqlserver.query.buffer_cache_hit_ratio")
-					validatedMetrics["sqlserver.query.buffer_cache_hit_ratio"] = true
-					assert.Equal(t, pmetric.MetricTypeGauge, ms.At(i).Type())
-					assert.Equal(t, 1, ms.At(i).Gauge().DataPoints().Len())
-					assert.Equal(t, "Ratio of logical vs physical reads", ms.At(i).Description())
-					assert.Equal(t, "%", ms.At(i).Unit())
-					dp := ms.At(i).Gauge().DataPoints().At(0)
-					assert.Equal(t, start, dp.StartTimestamp())
-					assert.Equal(t, ts, dp.Timestamp())
-					assert.Equal(t, pmetric.NumberDataPointValueTypeInt, dp.ValueType())
-					assert.Equal(t, int64(1), dp.IntValue())
-				case "sqlserver.query.cpu_time_ratio":
-					assert.False(t, validatedMetrics["sqlserver.query.cpu_time_ratio"], "Found a duplicate in the metrics slice: sqlserver.query.cpu_time_ratio")
-					validatedMetrics["sqlserver.query.cpu_time_ratio"] = true
-					assert.Equal(t, pmetric.MetricTypeGauge, ms.At(i).Type())
-					assert.Equal(t, 1, ms.At(i).Gauge().DataPoints().Len())
-					assert.Equal(t, "The ratio of total worker time to total elapsed time of the query", ms.At(i).Description())
-					assert.Equal(t, "%", ms.At(i).Unit())
-					dp := ms.At(i).Gauge().DataPoints().At(0)
-					assert.Equal(t, start, dp.StartTimestamp())
-					assert.Equal(t, ts, dp.Timestamp())
-					assert.Equal(t, pmetric.NumberDataPointValueTypeInt, dp.ValueType())
-					assert.Equal(t, int64(1), dp.IntValue())
 				case "sqlserver.query.executions_per_min":
 					assert.False(t, validatedMetrics["sqlserver.query.executions_per_min"], "Found a duplicate in the metrics slice: sqlserver.query.executions_per_min")
 					validatedMetrics["sqlserver.query.executions_per_min"] = true
