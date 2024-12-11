@@ -35,10 +35,6 @@ all_set:
       enabled: true
     sqlserver.query.average_response_time:
       enabled: true
-    sqlserver.query.buffer_cache_hit_ratio:
-      enabled: true
-    sqlserver.query.cpu_time_ratio:
-      enabled: true
     sqlserver.query.executions_per_min:
       enabled: true
     sqlserver.query.total_cpu_time:
@@ -123,10 +119,6 @@ none_set:
     sqlserver.processes.blocked:
       enabled: false
     sqlserver.query.average_response_time:
-      enabled: false
-    sqlserver.query.buffer_cache_hit_ratio:
-      enabled: false
-    sqlserver.query.cpu_time_ratio:
       enabled: false
     sqlserver.query.executions_per_min:
       enabled: false
