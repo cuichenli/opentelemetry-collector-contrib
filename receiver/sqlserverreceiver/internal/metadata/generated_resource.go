@@ -49,10 +49,10 @@ func (rb *ResourceBuilder) SetSqlserverQueryHash(val string) {
 	}
 }
 
-// SetSqlserverQueryText sets provided value as "sqlserver.query.text" attribute.
-func (rb *ResourceBuilder) SetSqlserverQueryText(val string) {
-	if rb.config.SqlserverQueryText.Enabled {
-		rb.res.Attributes().PutStr("sqlserver.query.text", val)
+// SetSqlserverQueryPlanHandle sets provided value as "sqlserver.query_plan.handle" attribute.
+func (rb *ResourceBuilder) SetSqlserverQueryPlanHandle(val string) {
+	if rb.config.SqlserverQueryPlanHandle.Enabled {
+		rb.res.Attributes().PutStr("sqlserver.query_plan.handle", val)
 	}
 }
 

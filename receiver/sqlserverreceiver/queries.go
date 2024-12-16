@@ -339,33 +339,26 @@ func getSQLServerPropertiesQuery(instanceName string) string {
 const sqlQueryMetrics = `
 %s
 %s
-SELECT TOP (@topNValue)
+SELECT TOP(@topNValue)
 REPLACE(@@SERVERNAME,'\',':') AS [sql_instance],
 HOST_NAME() AS [computer_name],
-qs.query_hash AS QueryHash,
-qs.query_plan_hash AS QueryPlanHash,
-SUBSTRING(SUBSTRING(ST.text, (qs.statement_start_offset/2) + 1,
-((CASE statement_end_offset WHEN -1 THEN DATALENGTH(ST.text)
-ELSE QS.statement_end_offset END- QS.statement_start_offset)/2) + 1),1, 100) AS SQLQueryText,
-COUNT(*) / CAST(DATEDIFF(MINUTE, DATEADD(SECOND, @granularity, GETDATE()), GETDATE()) AS FLOAT) AS ExecutionsPerMin,
-SUM(qs.total_elapsed_time) AS TotalElapsedTime,
-SUM(qs.total_worker_time) AS TotalCPUTime,
-SUM(qs.total_elapsed_time) / SUM(qs.execution_count) AS AvgResponseTime,
-SUM(qs.total_logical_reads) AS LogicalReads,
-SUM(qs.total_physical_reads) AS PhysicalReads,
-SUM(qs.total_logical_writes) AS LogicalWrites,
-SUM(qs.total_rows) AS RowsReturned
+MAX(qs.plan_handle) AS query_plan_handle,
+qs.query_hash AS query_hash,
+qs.query_plan_hash AS query_plan_hash,
+SUM(qs.execution_count) AS execution_count,
+SUM(qs.total_elapsed_time) AS total_elapsed_time,
+SUM(qs.total_worker_time) AS total_worker_time,
+SUM(qs.total_logical_reads) AS total_logical_reads,
+SUM(qs.total_physical_reads) AS total_physical_reads,
+SUM(qs.total_logical_writes) AS total_logical_writes,
+SUM(qs.total_rows) AS total_rows,
+SUM(qs.total_grant_kb) as total_grant_kb
 FROM sys.dm_exec_query_stats AS qs
-CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) AS st
 WHERE qs.last_execution_time BETWEEN DATEADD(SECOND, @granularity, GETDATE()) AND GETDATE() %s
 GROUP BY
 qs.query_hash,
-qs.query_plan_hash,
-SUBSTRING(ST.text, (qs.statement_start_offset/2) + 1,
-((CASE statement_end_offset WHEN -1 THEN DATALENGTH(ST.text)
-ELSE QS.statement_end_offset END - QS.statement_start_offset)/2) + 1)
-ORDER BY
-TotalElapsedTime DESC;`
+qs.query_plan_hash;
+`
 
 const granularityDeclaration = `DECLARE @granularity INT = -%s;`
 const topNValueDeclaration = `DECLARE @topNValue INT = %s;`
@@ -376,8 +369,7 @@ func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, gr
 	var granularityStatement string
 	var instanceNameClause string
 
-
-    if topQueryCount != "" {
+	if topQueryCount != "" {
 		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, topQueryCount)
 	} else {
 		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, "200")

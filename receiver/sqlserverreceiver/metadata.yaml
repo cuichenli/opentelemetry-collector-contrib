@@ -30,8 +30,8 @@ resource_attributes:
     description: Hash of the query plan
     enabled: false
     type: string
-  sqlserver.query.text:
-    description: Query text
+  sqlserver.query_plan.handle:
+    description: Query Plan Handle
     enabled: false
     type: string
 
@@ -267,6 +267,15 @@ metrics:
       input_type: string
     attributes: [database.status]
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
+  sqlserver.query.execution_count:
+    enabled: true
+    description: Number of executions of the query
+    unit: "{executions}"
+    sum:
+      monotonic: true
+      aggregation_temporality: cumulative
+      value_type: double
+    extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
   sqlserver.query.total_elapsed_time:
     enabled: true
     description: The total time taken by the query
@@ -276,14 +285,6 @@ metrics:
       aggregation_temporality: cumulative
       value_type: double
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
-  sqlserver.query.executions_per_min:
-    enabled: true
-    description: Number of executions per minute, of the query
-    unit: "{executions}"
-    gauge:
-      value_type: int
-      input_type: string
-    extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
   sqlserver.query.total_rows:
     enabled: true
     description: The total rows returned by the query
@@ -292,18 +293,9 @@ metrics:
       value_type: int
       input_type: string
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
-  sqlserver.query.total_cpu_time:
+  sqlserver.query.total_worker_time:
     enabled: true
     description: The total CPU time taken by the query
-    unit: "s"
-    sum:
-      monotonic: true
-      aggregation_temporality: cumulative
-      value_type: double
-    extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
-  sqlserver.query.average_response_time:
-    enabled: true
-    description: The average response time taken by the query
     unit: "s"
     sum:
       monotonic: true
@@ -333,6 +325,15 @@ metrics:
     gauge:
       value_type: int
       input_type: string
+    extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
+  sqlserver.query.total_grant_kb:
+    enabled: true
+    description: The total memory granted to the query
+    unit: "kb"
+    sum:
+      monotonic: true
+      aggregation_temporality: cumulative
+      value_type: double
     extended_documentation: This metric is only available when the receiver is configured to directly connect to SQL Server.
 
 tests:

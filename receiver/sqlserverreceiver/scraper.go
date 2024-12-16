@@ -313,18 +313,17 @@ func (s *sqlServerScraperHelper) recordDatabaseStatusMetrics(ctx context.Context
 
 func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 	// Constants are the column names of the database status
-	const totalElapsedTime = "TotalElapsedTime"
-	const rowsReturned = "RowsReturned"
-	const avgResponseTime = "AvgResponseTime"
-	const totalCPUTime = "TotalCPUTime"
-	const queryHash = "QueryHash"
-	const queryPlanHash = "QueryPlanHash"
-	const sqlQueryText = "SQLQueryText"
-	const logicalReads = "LogicalReads"
-	const logicalWrites = "LogicalWrites"
-	const physicalReads = "PhysicalReads"
-	const executionsPerMin = "ExecutionsPerMin"
-	const queryText = "queryText"
+	const totalElapsedTime = "total_elapsed_time"
+	const rowsReturned = "total_rows"
+	const totalWorkerTime = "total_worker_time"
+	const queryHash = "query_hash"
+	const queryPlanHash = "query_plan_hash"
+	const logicalReads = "total_logical_reads"
+	const logicalWrites = "total_logical_writes"
+	const physicalReads = "total_physical_reads"
+	const executionCount = "execution_count"
+	const totalGrant = "total_grant_kb"
+	const queryPlanHandle = "query_plan_handle"
 	rows, err := s.client.QueryRows(ctx)
 
 	if err != nil {
@@ -343,12 +342,11 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		rb.SetSqlserverInstanceName(row[instanceNameKey])
 		rb.SetSqlserverQueryHash(hex.EncodeToString([]byte(row[queryHash])))
 		rb.SetSqlserverQueryPlanHash(hex.EncodeToString([]byte(row[queryPlanHash])))
-		rb.SetSqlserverQueryText(row[sqlQueryText])
+		rb.SetSqlserverQueryPlanHandle(hex.EncodeToString([]byte(row[queryPlanHandle])))
 		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, hex.EncodeToString([]byte(row[queryPlanHash])), hex.EncodeToString([]byte(row[queryHash]))))
 
 		timeStamp := pcommon.NewTimestampFromTime(time.Now())
 
-		s.mb.RecordSqlserverQueryExecutionsPerMinDataPoint(timeStamp, row[executionsPerMin])
 		s.mb.RecordSqlserverQueryTotalRowsDataPoint(timeStamp, row[rowsReturned])
 		s.mb.RecordSqlserverQueryTotalLogicalReadsDataPoint(timeStamp, row[logicalReads])
 		s.mb.RecordSqlserverQueryTotalLogicalWritesDataPoint(timeStamp, row[logicalWrites])
@@ -361,18 +359,25 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 			s.mb.RecordSqlserverQueryTotalElapsedTimeDataPoint(timeStamp, elapsedTime)
 		}
 
-		cpuTime, err := strconv.ParseFloat(row[totalCPUTime], 64)
+		totalExecutionCount, err := strconv.ParseFloat(row[executionCount], 64)
+        if err != nil {
+      		s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+       	} else {
+        	s.mb.RecordSqlserverQueryExecutionCountDataPoint(timeStamp, totalExecutionCount)
+   		}
+
+		workerTime, err := strconv.ParseFloat(row[totalWorkerTime], 64)
 		if err != nil {
-			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed parsing metric total_worker_time: %w", err))
 		} else {
-			s.mb.RecordSqlserverQueryTotalCPUTimeDataPoint(timeStamp, cpuTime)
+			s.mb.RecordSqlserverQueryTotalWorkerTimeDataPoint(timeStamp, workerTime)
 		}
 
-		avgResTime, err := strconv.ParseFloat(row[avgResponseTime], 64)
+		memoryGranted, err := strconv.ParseFloat(row[totalGrant], 64)
 		if err != nil {
-			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %w", err))
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed parsing metric total_grant_kb: %w", err))
 		} else {
-			s.mb.RecordSqlserverQueryAverageResponseTimeDataPoint(timeStamp, avgResTime)
+			s.mb.RecordSqlserverQueryTotalGrantKbDataPoint(timeStamp, memoryGranted)
 		}
 
 		var resource = rb.Emit()

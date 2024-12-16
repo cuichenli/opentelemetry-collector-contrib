@@ -17,7 +17,7 @@ func TestResourceBuilder(t *testing.T) {
 			rb.SetSqlserverDatabaseName("sqlserver.database.name-val")
 			rb.SetSqlserverInstanceName("sqlserver.instance.name-val")
 			rb.SetSqlserverQueryHash("sqlserver.query.hash-val")
-			rb.SetSqlserverQueryText("sqlserver.query.text-val")
+			rb.SetSqlserverQueryPlanHandle("sqlserver.query_plan.handle-val")
 			rb.SetSqlserverQueryPlanHash("sqlserver.query_plan.hash-val")
 
 			res := rb.Emit()
@@ -55,10 +55,10 @@ func TestResourceBuilder(t *testing.T) {
 			if ok {
 				assert.EqualValues(t, "sqlserver.query.hash-val", val.Str())
 			}
-			val, ok = res.Attributes().Get("sqlserver.query.text")
+			val, ok = res.Attributes().Get("sqlserver.query_plan.handle")
 			assert.Equal(t, tt == "all_set", ok)
 			if ok {
-				assert.EqualValues(t, "sqlserver.query.text-val", val.Str())
+				assert.EqualValues(t, "sqlserver.query_plan.handle-val", val.Str())
 			}
 			val, ok = res.Attributes().Get("sqlserver.query_plan.hash")
 			assert.Equal(t, tt == "all_set", ok)
