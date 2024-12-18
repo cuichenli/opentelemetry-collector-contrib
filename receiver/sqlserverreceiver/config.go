@@ -21,10 +21,12 @@ type Config struct {
 	ComputerName string `mapstructure:"computer_name"`
 
 	// The following options currently do nothing. Functionality will be added in a future PR.
-	Password configopaque.String `mapstructure:"password"`
-	Port     uint                `mapstructure:"port"`
-	Server   string              `mapstructure:"server"`
-	Username string              `mapstructure:"username"`
+	Password      configopaque.String `mapstructure:"password"`
+	Port          uint                `mapstructure:"port"`
+	Server        string              `mapstructure:"server"`
+	Username      string              `mapstructure:"username"`
+	Granularity   string              `mapstructure:"granularity"`
+	TopQueryCount string              `mapstructure:"topQueryCount"`
 }
 
 func (cfg *Config) Validate() error {
