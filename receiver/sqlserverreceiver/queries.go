@@ -389,3 +389,22 @@ func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, gr
 
 	return fmt.Sprintf(sqlQueryMetrics, granularityStatement, topQueryCountStatement, instanceNameClause)
 }
+
+const getQueryText = `
+SELECT
+qs.plan_handle,
+SUBSTRING(st.text, (qs.statement_start_offset/2) + 1,
+((CASE statement_end_offset WHEN -1 THEN DATALENGTH(st.text)
+ELSE qs.statement_end_offset END- qs.statement_start_offset)/2) + 1) AS query_text,
+qp.query_plan AS plan_text
+FROM
+sys.dm_exec_query_stats AS qs
+CROSS APPLY sys.dm_exec_sql_text(qs.plan_handle) AS st
+CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) AS qp`
+
+func getQueryTextQuery(planHandle string) string {
+
+    whereClause := fmt.Sprintf("WHERE qs.plan_handle IN ( ''%s''\)", planHandle)
+
+	return fmt.Sprintf(getQueryText, whereClause)
+}
