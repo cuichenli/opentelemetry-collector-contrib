@@ -336,6 +336,60 @@ func getSQLServerPropertiesQuery(instanceName string) string {
 	return fmt.Sprintf(sqlServerProperties, "")
 }
 
+const sqlQueryMetrics = `
+%s
+%s
+SELECT TOP(@topNValue)
+REPLACE(@@SERVERNAME,'\',':') AS [sql_instance],
+HOST_NAME() AS [computer_name],
+MAX(qs.plan_handle) AS query_plan_handle,
+qs.query_hash AS query_hash,
+qs.query_plan_hash AS query_plan_hash,
+SUM(qs.execution_count) AS execution_count,
+SUM(qs.total_elapsed_time) AS total_elapsed_time,
+SUM(qs.total_worker_time) AS total_worker_time,
+SUM(qs.total_logical_reads) AS total_logical_reads,
+SUM(qs.total_physical_reads) AS total_physical_reads,
+SUM(qs.total_logical_writes) AS total_logical_writes,
+SUM(qs.total_rows) AS total_rows,
+SUM(qs.total_grant_kb) as total_grant_kb
+FROM sys.dm_exec_query_stats AS qs
+WHERE qs.last_execution_time BETWEEN DATEADD(SECOND, @granularity, GETDATE()) AND GETDATE() %s
+GROUP BY
+qs.query_hash,
+qs.query_plan_hash;
+`
+
+const granularityDeclaration = `DECLARE @granularity INT = -%s;`
+const topNValueDeclaration = `DECLARE @topNValue INT = %s;`
+
+func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, granularity string) string {
+
+	var topQueryCountStatement string
+	var granularityStatement string
+	var instanceNameClause string
+
+	if topQueryCount != "" {
+		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, topQueryCount)
+	} else {
+		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, "200")
+	}
+
+	if granularity != "" {
+		granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
+	} else {
+		granularityStatement = fmt.Sprintf(granularityDeclaration, "10")
+	}
+
+	if instanceName != "" {
+		instanceNameClause = fmt.Sprintf("AND @@SERVERNAME = ''%s''", instanceName)
+	} else {
+		instanceNameClause = ""
+	}
+
+	return fmt.Sprintf(sqlQueryMetrics, granularityStatement, topQueryCountStatement, instanceNameClause)
+}
+
 const getQueryText = `
 SELECT
 qs.plan_handle,
