@@ -360,11 +360,12 @@ qs.query_hash,
 qs.query_plan_hash;
 `
 
-const granularityDeclaration = `DECLARE @granularity INT = -%s;`
-const topNValueDeclaration = `DECLARE @topNValue INT = %s;`
+const (
+	granularityDeclaration = `DECLARE @granularity INT = -%s;`
+	topNValueDeclaration   = `DECLARE @topNValue INT = %s;`
+)
 
 func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, granularity string) string {
-
 	var topQueryCountStatement string
 	var granularityStatement string
 	var instanceNameClause string
@@ -404,7 +405,7 @@ CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) AS qp`
 
 func getQueryTextQuery(planHandle string) string {
 
-    whereClause := fmt.Sprintf("WHERE qs.plan_handle IN ( ''%s''\)", planHandle)
+	whereClause := fmt.Sprintf("WHERE qs.plan_handle IN ( ''%s'')", planHandle)
 
 	return fmt.Sprintf(getQueryText, whereClause)
 }

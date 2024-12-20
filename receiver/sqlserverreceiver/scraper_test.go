@@ -145,6 +145,38 @@ func TestScrapeInvalidQuery(t *testing.T) {
 	}
 }
 
+func TestScrapeCacheAndDiff(t *testing.T) {
+	cfg := createDefaultConfig().(*Config)
+	cfg.Username = "sa"
+	cfg.Password = "password"
+	cfg.Port = 1433
+	cfg.Server = "0.0.0.0"
+	cfg.MetricsBuilderConfig.ResourceAttributes.SqlserverInstanceName.Enabled = true
+
+	assert.NoError(t, cfg.Validate())
+
+	enableAllScraperMetrics(cfg)
+	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
+	assert.NotNil(t, scrapers)
+
+	scraper := scrapers[0]
+	cached, val := scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", -1)
+	assert.False(t, cached)
+	assert.Equal(t, 0, val)
+
+	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 1)
+	assert.False(t, cached)
+	assert.Equal(t, 1, val)
+
+	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 1)
+	assert.True(t, cached)
+	assert.Equal(t, 0, val)
+
+	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 3)
+	assert.True(t, cached)
+	assert.Equal(t, 2, val)
+}
+
 var _ sqlquery.DbClient = (*mockClient)(nil)
 
 type mockClient struct {

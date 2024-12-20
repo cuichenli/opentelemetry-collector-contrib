@@ -141,19 +141,19 @@ func TestMetricsBuilder(t *testing.T) {
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSqlserverQueryTotalLogicalReadsDataPoint(ts, "1")
+			mb.RecordSqlserverQueryTotalLogicalReadsDataPoint(ts, 1)
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSqlserverQueryTotalLogicalWritesDataPoint(ts, "1")
+			mb.RecordSqlserverQueryTotalLogicalWritesDataPoint(ts, 1)
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSqlserverQueryTotalPhysicalReadsDataPoint(ts, "1")
+			mb.RecordSqlserverQueryTotalPhysicalReadsDataPoint(ts, 1)
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordSqlserverQueryTotalRowsDataPoint(ts, "1")
+			mb.RecordSqlserverQueryTotalRowsDataPoint(ts, 1)
 
 			defaultMetricsCount++
 			allMetricsCount++

@@ -2256,43 +2256,23 @@ func (mb *MetricsBuilder) RecordSqlserverQueryTotalGrantKbDataPoint(ts pcommon.T
 }
 
 // RecordSqlserverQueryTotalLogicalReadsDataPoint adds a data point to sqlserver.query.total_logical_reads metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryTotalLogicalReadsDataPoint(ts pcommon.Timestamp, inputVal string) error {
-	val, err := strconv.ParseInt(inputVal, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse int64 for SqlserverQueryTotalLogicalReads, value was %s: %w", inputVal, err)
-	}
+func (mb *MetricsBuilder) RecordSqlserverQueryTotalLogicalReadsDataPoint(ts pcommon.Timestamp, val int64) {
 	mb.metricSqlserverQueryTotalLogicalReads.recordDataPoint(mb.startTime, ts, val)
-	return nil
 }
 
 // RecordSqlserverQueryTotalLogicalWritesDataPoint adds a data point to sqlserver.query.total_logical_writes metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryTotalLogicalWritesDataPoint(ts pcommon.Timestamp, inputVal string) error {
-	val, err := strconv.ParseInt(inputVal, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse int64 for SqlserverQueryTotalLogicalWrites, value was %s: %w", inputVal, err)
-	}
+func (mb *MetricsBuilder) RecordSqlserverQueryTotalLogicalWritesDataPoint(ts pcommon.Timestamp, val int64) {
 	mb.metricSqlserverQueryTotalLogicalWrites.recordDataPoint(mb.startTime, ts, val)
-	return nil
 }
 
 // RecordSqlserverQueryTotalPhysicalReadsDataPoint adds a data point to sqlserver.query.total_physical_reads metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryTotalPhysicalReadsDataPoint(ts pcommon.Timestamp, inputVal string) error {
-	val, err := strconv.ParseInt(inputVal, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse int64 for SqlserverQueryTotalPhysicalReads, value was %s: %w", inputVal, err)
-	}
+func (mb *MetricsBuilder) RecordSqlserverQueryTotalPhysicalReadsDataPoint(ts pcommon.Timestamp, val int64) {
 	mb.metricSqlserverQueryTotalPhysicalReads.recordDataPoint(mb.startTime, ts, val)
-	return nil
 }
 
 // RecordSqlserverQueryTotalRowsDataPoint adds a data point to sqlserver.query.total_rows metric.
-func (mb *MetricsBuilder) RecordSqlserverQueryTotalRowsDataPoint(ts pcommon.Timestamp, inputVal string) error {
-	val, err := strconv.ParseInt(inputVal, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse int64 for SqlserverQueryTotalRows, value was %s: %w", inputVal, err)
-	}
+func (mb *MetricsBuilder) RecordSqlserverQueryTotalRowsDataPoint(ts pcommon.Timestamp, val int64) {
 	mb.metricSqlserverQueryTotalRows.recordDataPoint(mb.startTime, ts, val)
-	return nil
 }
 
 // RecordSqlserverQueryTotalWorkerTimeDataPoint adds a data point to sqlserver.query.total_worker_time metric.

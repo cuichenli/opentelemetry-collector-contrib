@@ -9,10 +9,14 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
+
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/scraperhelper"
 	"go.opentelemetry.io/collector/scraper"
+
+	lru "github.com/hashicorp/golang-lru/v2"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/sqlquery"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sqlserverreceiver/internal/metadata"
@@ -98,6 +102,12 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 	for i, query := range queries {
 		id := component.NewIDWithName(metadata.Type, fmt.Sprintf("query-%d: %s", i, query))
 
+		cache, err := lru.New[string, float64](5000)
+		if err != nil {
+			params.Logger.Error("Failed to create LRU cache, skipping the current scraper", zap.Error(err))
+			continue
+		}
+
 		sqlServerScraper := newSQLServerScraper(id, query,
 			cfg.TopQueryCount,
 			cfg.Granularity,
@@ -107,7 +117,8 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 			sqlquery.TelemetryConfig{},
 			dbProviderFunc,
 			sqlquery.NewDbClient,
-			metadata.NewMetricsBuilder(cfg.MetricsBuilderConfig, params))
+			metadata.NewMetricsBuilder(cfg.MetricsBuilderConfig, params),
+			cache)
 
 		scrapers = append(scrapers, sqlServerScraper)
 	}

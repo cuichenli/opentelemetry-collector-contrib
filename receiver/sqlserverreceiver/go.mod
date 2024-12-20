@@ -3,6 +3,7 @@ module github.com/open-telemetry/opentelemetry-collector-contrib/receiver/sqlser
 go 1.22.0
 
 require (
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.59.1
 	github.com/google/go-cmp v0.6.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/sqlquery v0.115.0
