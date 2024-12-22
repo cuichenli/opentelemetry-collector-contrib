@@ -32,27 +32,27 @@ const (
 )
 
 type sqlServerScraperHelper struct {
-	id                 component.ID
-	sqlQuery           string
-	topQueryCount      string
-	granularity        string
-	instanceName       string
-	scrapeCfg          scraperhelper.ControllerConfig
-	clientProviderFunc sqlquery.ClientProviderFunc
-	dbProviderFunc     sqlquery.DbProviderFunc
-	logger             *zap.Logger
-	telemetry          sqlquery.TelemetryConfig
-	client             sqlquery.DbClient
-	db                 *sql.DB
-	mb                 *metadata.MetricsBuilder
-	cache              *lru.Cache[string, float64]
+	id                  component.ID
+	sqlQuery            string
+	maxQuerySampleCount uint
+	granularity         string
+	instanceName        string
+	scrapeCfg           scraperhelper.ControllerConfig
+	clientProviderFunc  sqlquery.ClientProviderFunc
+	dbProviderFunc      sqlquery.DbProviderFunc
+	logger              *zap.Logger
+	telemetry           sqlquery.TelemetryConfig
+	client              sqlquery.DbClient
+	db                  *sql.DB
+	mb                  *metadata.MetricsBuilder
+	cache               *lru.Cache[string, float64]
 }
 
 var _ scraper.Metrics = (*sqlServerScraperHelper)(nil)
 
 func newSQLServerScraper(id component.ID,
 	query string,
-	topQueryCount string,
+	maxQuerySampleCount uint,
 	granularity string,
 	instanceName string,
 	scrapeCfg scraperhelper.ControllerConfig,
@@ -64,18 +64,18 @@ func newSQLServerScraper(id component.ID,
 	cache *lru.Cache[string, float64],
 ) *sqlServerScraperHelper {
 	return &sqlServerScraperHelper{
-		id:                 id,
-		sqlQuery:           query,
-		topQueryCount:      topQueryCount,
-		granularity:        granularity,
-		instanceName:       instanceName,
-		scrapeCfg:          scrapeCfg,
-		logger:             logger,
-		telemetry:          telemetry,
-		dbProviderFunc:     dbProviderFunc,
-		clientProviderFunc: clientProviderFunc,
-		mb:                 mb,
-		cache:              cache,
+		id:                  id,
+		sqlQuery:            query,
+		maxQuerySampleCount: maxQuerySampleCount,
+		granularity:         granularity,
+		instanceName:        instanceName,
+		scrapeCfg:           scrapeCfg,
+		logger:              logger,
+		telemetry:           telemetry,
+		dbProviderFunc:      dbProviderFunc,
+		clientProviderFunc:  clientProviderFunc,
+		mb:                  mb,
+		cache:               cache,
 	}
 }
 
@@ -98,7 +98,7 @@ func (s *sqlServerScraperHelper) ScrapeMetrics(ctx context.Context) (pmetric.Met
 	var err error
 
 	switch s.sqlQuery {
-	case getSQLServerQueryMetricsQuery(s.instanceName, s.topQueryCount, s.granularity):
+	case getSQLServerQueryMetricsQuery(s.instanceName, s.maxQuerySampleCount, s.granularity):
 		err = s.recordQueryMetrics(ctx)
 	case getSQLServerDatabaseIOQuery(s.instanceName):
 		err = s.recordDatabaseIOMetrics(ctx)

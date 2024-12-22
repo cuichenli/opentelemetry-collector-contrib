@@ -362,19 +362,16 @@ qs.query_plan_hash;
 
 const (
 	granularityDeclaration = `DECLARE @granularity INT = -%s;`
-	topNValueDeclaration   = `DECLARE @topNValue INT = %s;`
+	topNValueDeclaration   = `DECLARE @topNValue INT = %d;`
 )
 
-func getSQLServerQueryMetricsQuery(instanceName string, topQueryCount string, granularity string) string {
+func getSQLServerQueryMetricsQuery(instanceName string, maxQuerySampleCount uint, granularity string) string {
 	var topQueryCountStatement string
 	var granularityStatement string
 	var instanceNameClause string
 
-	if topQueryCount != "" {
-		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, topQueryCount)
-	} else {
-		topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, "200")
-	}
+	maxQuerySampleCount = min(max(0, maxQuerySampleCount), 10000)
+	topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, maxQuerySampleCount)
 
 	if granularity != "" {
 		granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)

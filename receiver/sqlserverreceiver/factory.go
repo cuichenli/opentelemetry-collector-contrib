@@ -63,7 +63,7 @@ func setupQueries(cfg *Config) []string {
 	if cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseCount.Enabled {
 		queries = append(queries, getSQLServerPropertiesQuery(cfg.InstanceName))
 	}
-	queries = append(queries, getSQLServerQueryMetricsQuery(cfg.InstanceName, cfg.TopQueryCount, cfg.Granularity))
+	queries = append(queries, getSQLServerQueryMetricsQuery(cfg.InstanceName, cfg.MaxQuerySampleCount, cfg.Granularity))
 
 	return queries
 }
@@ -102,14 +102,14 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 	for i, query := range queries {
 		id := component.NewIDWithName(metadata.Type, fmt.Sprintf("query-%d: %s", i, query))
 
-		cache, err := lru.New[string, float64](5000)
+		cache, err := lru.New[string, float64](10000 * 10)
 		if err != nil {
 			params.Logger.Error("Failed to create LRU cache, skipping the current scraper", zap.Error(err))
 			continue
 		}
 
 		sqlServerScraper := newSQLServerScraper(id, query,
-			cfg.TopQueryCount,
+			cfg.MaxQuerySampleCount,
 			cfg.Granularity,
 			cfg.InstanceName,
 			cfg.ControllerConfig,
