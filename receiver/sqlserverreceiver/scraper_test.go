@@ -7,9 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component/componenttest"
@@ -175,6 +179,33 @@ func TestScrapeCacheAndDiff(t *testing.T) {
 	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 3)
 	assert.True(t, cached)
 	assert.Equal(t, 2, val)
+}
+
+func TestSortRows(t *testing.T) {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	weights := make([]int64, 50)
+
+	for i := range weights {
+		weights[i] = rand.Int63()
+	}
+
+	var rows []sqlquery.StringMap
+	for _, v := range weights {
+		rows = append(rows, sqlquery.StringMap{"column": strconv.FormatInt(v, 10)})
+	}
+
+	rows = sortRows(rows, weights)
+	sort.Slice(weights, func(i, j int) bool {
+		return weights[i] > weights[j]
+	})
+
+	for i, v := range weights {
+		expected := v
+		actual, err := strconv.ParseInt(rows[i]["column"], 10, 64)
+		assert.Nil(t, err)
+		assert.Equal(t, expected, actual)
+	}
 }
 
 var _ sqlquery.DbClient = (*mockClient)(nil)

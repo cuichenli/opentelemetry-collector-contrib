@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -209,6 +210,7 @@ func (s *sqlServerScraperHelper) recordDatabasePerfCounterMetrics(ctx context.Co
 
 	var errs []error
 	now := pcommon.NewTimestampFromTime(time.Now())
+
 	for i, row := range rows {
 		rb := s.mb.NewResourceBuilder()
 		rb.SetSqlserverComputerName(row[computerNameKey])
@@ -337,7 +339,34 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		}
 	}
 	var errs []error
+
+	totalElapsedTimeDiffs := make([]int64, len(rows))
+
 	for i, row := range rows {
+		queryHashVal := hex.EncodeToString([]byte(row[queryHash]))
+		queryPlanHashVal := hex.EncodeToString([]byte(row[queryPlanHandle]))
+
+		elapsedTime, err := strconv.ParseFloat(row[totalElapsedTime], 64)
+		if err != nil {
+			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %s", err))
+		} else {
+			if cached, diff := s.cacheAndDiff(queryHashVal, queryPlanHashVal, totalElapsedTime, elapsedTime); cached && diff > 0 {
+				totalElapsedTimeDiffs[i] = int64(diff)
+			}
+		}
+	}
+
+	rows = sortRows(rows, totalElapsedTimeDiffs)
+
+	sort.Slice(totalElapsedTimeDiffs, func(i, j int) bool {
+		return totalElapsedTimeDiffs[i] > totalElapsedTimeDiffs[j]
+	})
+
+	for i, row := range rows {
+		// skipping as not cached
+		if totalElapsedTimeDiffs[i] == 0 {
+			continue
+		}
 
 		queryHashVal := hex.EncodeToString([]byte(row[queryHash]))
 		queryPlanHashVal := hex.EncodeToString([]byte(row[queryPlanHash]))
@@ -351,6 +380,8 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, queryPlanHashVal, queryHashVal))
 
 		timeStamp := pcommon.NewTimestampFromTime(time.Now())
+
+		s.mb.RecordSqlserverQueryTotalElapsedTimeDataPoint(timeStamp, float64(totalElapsedTimeDiffs[i]))
 
 		rowsReturnVal, err := strconv.ParseInt(row[rowsReturned], 10, 64)
 		if err != nil {
@@ -386,15 +417,6 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		}
 		if cached, diff := s.cacheAndDiff(queryHashVal, queryPlanHashVal, physicalReads, float64(physicalReadsVal)); cached && diff > 0 {
 			s.mb.RecordSqlserverQueryTotalPhysicalReadsDataPoint(timeStamp, int64(diff))
-		}
-
-		elapsedTime, err := strconv.ParseFloat(row[totalElapsedTime], 64)
-		if err != nil {
-			s.logger.Info(fmt.Sprintf("sqlServerScraperHelper failed getting metric rows: %s", err))
-		} else {
-			if cached, diff := s.cacheAndDiff(queryHashVal, queryPlanHashVal, totalElapsedTime, elapsedTime); cached && diff > 0 {
-				s.mb.RecordSqlserverQueryTotalElapsedTimeDataPoint(timeStamp, diff)
-			}
 		}
 
 		totalExecutionCount, err := strconv.ParseFloat(row[executionCount], 64)
@@ -455,4 +477,25 @@ func (s *sqlServerScraperHelper) cacheAndDiff(queryHash string, queryPlanHash st
 	}
 
 	return true, 0
+}
+
+func sortRows(rows []sqlquery.StringMap, values []int64) []sqlquery.StringMap {
+	// Create an index slice to track the original indices of rows
+	indices := make([]int, len(values))
+	for i := range indices {
+		indices[i] = i
+	}
+
+	// Sort the indices based on the values slice
+	sort.Slice(indices, func(i, j int) bool {
+		return values[indices[i]] > values[indices[j]]
+	})
+
+	// Create a new sorted slice for rows based on the sorted indices
+	sorted := make([]sqlquery.StringMap, len(rows))
+	for i, idx := range indices {
+		sorted[i] = rows[idx]
+	}
+
+	return sorted
 }
