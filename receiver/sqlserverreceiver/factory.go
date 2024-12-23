@@ -38,6 +38,8 @@ func createDefaultConfig() component.Config {
 	return &Config{
 		ControllerConfig:     cfg,
 		MetricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
+		MaxQuerySampleCount:  10000,
+		TopQueryCount:        200,
 	}
 }
 
