@@ -36,6 +36,7 @@ type sqlServerScraperHelper struct {
 	sqlQuery            string
 	maxQuerySampleCount uint
 	granularity         string
+	topQueryCount       uint
 	instanceName        string
 	scrapeCfg           scraperhelper.ControllerConfig
 	clientProviderFunc  sqlquery.ClientProviderFunc
@@ -54,6 +55,7 @@ func newSQLServerScraper(id component.ID,
 	query string,
 	maxQuerySampleCount uint,
 	granularity string,
+	topQueryCount uint,
 	instanceName string,
 	scrapeCfg scraperhelper.ControllerConfig,
 	logger *zap.Logger,
@@ -68,6 +70,7 @@ func newSQLServerScraper(id component.ID,
 		sqlQuery:            query,
 		maxQuerySampleCount: maxQuerySampleCount,
 		granularity:         granularity,
+		topQueryCount:       topQueryCount,
 		instanceName:        instanceName,
 		scrapeCfg:           scrapeCfg,
 		logger:              logger,
@@ -99,7 +102,7 @@ func (s *sqlServerScraperHelper) ScrapeMetrics(ctx context.Context) (pmetric.Met
 
 	switch s.sqlQuery {
 	case getSQLServerQueryMetricsQuery(s.instanceName, s.maxQuerySampleCount, s.granularity):
-		err = s.recordQueryMetrics(ctx)
+		err = s.recordQueryMetrics(ctx, s.topQueryCount)
 	case getSQLServerDatabaseIOQuery(s.instanceName):
 		err = s.recordDatabaseIOMetrics(ctx)
 	case getSQLServerPerformanceCounterQuery(s.instanceName):
@@ -317,7 +320,7 @@ func (s *sqlServerScraperHelper) recordDatabaseStatusMetrics(ctx context.Context
 	return errors.Join(errs...)
 }
 
-func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
+func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context, topQueryCount uint) error {
 	// Constants are the column names of the database status
 	const totalElapsedTime = "total_elapsed_time"
 	const rowsReturned = "total_rows"
@@ -362,7 +365,12 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context) error {
 		return totalElapsedTimeDiffs[i] > totalElapsedTimeDiffs[j]
 	})
 
+	topn := int(min(max(0, topQueryCount), 200))
 	for i, row := range rows {
+		if i >= topn {
+			break
+		}
+
 		// skipping as not cached
 		if totalElapsedTimeDiffs[i] == 0 {
 			continue

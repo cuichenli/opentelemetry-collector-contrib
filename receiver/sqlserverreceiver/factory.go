@@ -111,6 +111,7 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 		sqlServerScraper := newSQLServerScraper(id, query,
 			cfg.MaxQuerySampleCount,
 			cfg.Granularity,
+			cfg.TopQueryCount,
 			cfg.InstanceName,
 			cfg.ControllerConfig,
 			params.Logger,

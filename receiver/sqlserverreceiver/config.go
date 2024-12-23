@@ -27,6 +27,7 @@ type Config struct {
 	Username            string              `mapstructure:"username"`
 	Granularity         string              `mapstructure:"granularity"`
 	MaxQuerySampleCount uint                `mapstructure:"max_query_sample_count"`
+	TopQueryCount       uint                `mapstructure:"top_query_count"`
 }
 
 func (cfg *Config) Validate() error {
