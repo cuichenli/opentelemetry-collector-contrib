@@ -398,7 +398,9 @@ qp.query_plan AS plan_text
 FROM
 sys.dm_exec_query_stats AS qs
 CROSS APPLY sys.dm_exec_sql_text(qs.plan_handle) AS st
-CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) AS qp`
+CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) AS qp
+%s
+`
 
 func getQueryTextQuery(planHandle string) string {
 

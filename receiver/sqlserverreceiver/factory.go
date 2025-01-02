@@ -65,8 +65,17 @@ func setupQueries(cfg *Config) []string {
 	if cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseCount.Enabled {
 		queries = append(queries, getSQLServerPropertiesQuery(cfg.InstanceName))
 	}
-	queries = append(queries, getSQLServerQueryMetricsQuery(cfg.InstanceName, cfg.MaxQuerySampleCount, cfg.Granularity))
 
+	if cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled ||
+		cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled {
+		queries = append(queries, getSQLServerQueryMetricsQuery(cfg.InstanceName, cfg.MaxQuerySampleCount, cfg.Granularity))
+	}
 	return queries
 }
 

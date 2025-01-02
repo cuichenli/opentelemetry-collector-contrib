@@ -46,6 +46,15 @@ func enableAllScraperMetrics(cfg *Config) {
 	cfg.MetricsBuilderConfig.Metrics.SqlserverResourcePoolDiskThrottledWriteRate.Enabled = true
 
 	cfg.MetricsBuilderConfig.Metrics.SqlserverUserConnectionCount.Enabled = true
+
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled = true
 }
 
 func TestEmptyScrape(t *testing.T) {
@@ -65,6 +74,14 @@ func TestEmptyScrape(t *testing.T) {
 	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLRecompilationRate.Enabled = false
 	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLCompilationRate.Enabled = false
 	cfg.MetricsBuilderConfig.Metrics.SqlserverUserConnectionCount.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = false
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled = false
 	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
 	assert.Empty(t, scrapers)
 }
@@ -89,8 +106,10 @@ func TestSuccessfulScrape(t *testing.T) {
 		defer assert.NoError(t, scraper.Shutdown(context.Background()))
 
 		scraper.client = mockClient{
-			instanceName: scraper.instanceName,
-			SQL:          scraper.sqlQuery,
+			instanceName:        scraper.instanceName,
+			SQL:                 scraper.sqlQuery,
+			maxQuerySampleCount: 10000,
+			granularity:         "",
 		}
 
 		actualMetrics, err := scraper.ScrapeMetrics(context.Background())
@@ -104,6 +123,8 @@ func TestSuccessfulScrape(t *testing.T) {
 			expectedFile = filepath.Join("testdata", "expectedPerfCounters.yaml")
 		case getSQLServerPropertiesQuery(scraper.instanceName):
 			expectedFile = filepath.Join("testdata", "expectedProperties.yaml")
+		case getSQLServerQueryMetricsQuery(scraper.instanceName, scraper.maxQuerySampleCount, scraper.granularity):
+			expectedFile = filepath.Join("testdata", "expectedQueryMetrics.yaml")
 		}
 
 		// Uncomment line below to re-generate expected metrics.
@@ -166,19 +187,19 @@ func TestScrapeCacheAndDiff(t *testing.T) {
 	scraper := scrapers[0]
 	cached, val := scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", -1)
 	assert.False(t, cached)
-	assert.Equal(t, 0, val)
+	assert.Equal(t, 0.0, val)
 
 	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 1)
 	assert.False(t, cached)
-	assert.Equal(t, 1, val)
+	assert.Equal(t, 1.0, val)
 
 	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 1)
 	assert.True(t, cached)
-	assert.Equal(t, 0, val)
+	assert.Equal(t, 0.0, val)
 
 	cached, val = scraper.cacheAndDiff("query_hash", "query_plan_hash", "column", 3)
 	assert.True(t, cached)
-	assert.Equal(t, 2, val)
+	assert.Equal(t, 2.0, val)
 }
 
 func TestSortRows(t *testing.T) {
@@ -211,8 +232,10 @@ func TestSortRows(t *testing.T) {
 var _ sqlquery.DbClient = (*mockClient)(nil)
 
 type mockClient struct {
-	SQL          string
-	instanceName string
+	SQL                 string
+	instanceName        string
+	maxQuerySampleCount uint
+	granularity         string
 }
 
 func readFile(fname string) ([]sqlquery.StringMap, error) {
@@ -241,6 +264,8 @@ func (mc mockClient) QueryRows(context.Context, ...any) ([]sqlquery.StringMap, e
 		queryResults, err = readFile("perfCounterQueryData.txt")
 	case getSQLServerPropertiesQuery(mc.instanceName):
 		queryResults, err = readFile("propertyQueryData.txt")
+	case getSQLServerQueryMetricsQuery(mc.instanceName, mc.maxQuerySampleCount, mc.granularity):
+		queryResults, err = readFile("queryMetricsQueryData.txt")
 	default:
 		return nil, errors.New("No valid query found")
 	}

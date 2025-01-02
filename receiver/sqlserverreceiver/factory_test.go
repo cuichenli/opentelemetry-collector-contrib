@@ -41,6 +41,8 @@ func TestCreateMetrics(t *testing.T) {
 						InitialDelay:       time.Second,
 					},
 					MetricsBuilderConfig: metadata.DefaultMetricsBuilderConfig(),
+					MaxQuerySampleCount:  10000,
+					TopQueryCount:        200,
 				}
 
 				require.Equal(t, expectedCfg, factory.CreateDefaultConfig())
