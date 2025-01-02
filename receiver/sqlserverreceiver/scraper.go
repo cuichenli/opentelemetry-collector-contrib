@@ -365,9 +365,8 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context, topQuer
 		return totalElapsedTimeDiffs[i] > totalElapsedTimeDiffs[j]
 	})
 
-	topn := int(min(max(0, topQueryCount), 200))
 	for i, row := range rows {
-		if i >= topn {
+		if i >= int(topQueryCount) {
 			break
 		}
 

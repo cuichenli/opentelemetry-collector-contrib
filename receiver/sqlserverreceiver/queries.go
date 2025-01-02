@@ -370,7 +370,6 @@ func getSQLServerQueryMetricsQuery(instanceName string, maxQuerySampleCount uint
 	var granularityStatement string
 	var instanceNameClause string
 
-	maxQuerySampleCount = min(max(0, maxQuerySampleCount), 10000)
 	topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, maxQuerySampleCount)
 
 	if granularity != "" {
