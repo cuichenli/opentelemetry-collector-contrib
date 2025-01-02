@@ -463,6 +463,7 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context, topQuer
 
 func (s *sqlServerScraperHelper) cacheAndDiff(queryHash string, queryPlanHash string, column string, val float64) (bool, float64) {
 	if s.cache == nil {
+		s.logger.Error("LRU cache is not successfully initialized, skipping caching and diffing")
 		return false, 0
 	}
 
