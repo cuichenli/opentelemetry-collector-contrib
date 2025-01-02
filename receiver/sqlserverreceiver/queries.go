@@ -361,22 +361,18 @@ qs.query_plan_hash;
 `
 
 const (
-	granularityDeclaration = `DECLARE @granularity INT = -%s;`
+	granularityDeclaration = `DECLARE @granularity INT = -%d;`
 	topNValueDeclaration   = `DECLARE @topNValue INT = %d;`
 )
 
-func getSQLServerQueryMetricsQuery(instanceName string, maxQuerySampleCount uint, granularity string) string {
+func getSQLServerQueryMetricsQuery(instanceName string, maxQuerySampleCount uint, granularity uint) string {
 	var topQueryCountStatement string
 	var granularityStatement string
 	var instanceNameClause string
 
 	topQueryCountStatement = fmt.Sprintf(topNValueDeclaration, maxQuerySampleCount)
 
-	if granularity != "" {
-		granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
-	} else {
-		granularityStatement = fmt.Sprintf(granularityDeclaration, "10")
-	}
+	granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
 
 	if instanceName != "" {
 		instanceNameClause = fmt.Sprintf("AND @@SERVERNAME = ''%s''", instanceName)

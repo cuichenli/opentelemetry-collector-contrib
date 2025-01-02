@@ -25,7 +25,7 @@ type Config struct {
 	Port                uint                `mapstructure:"port"`
 	Server              string              `mapstructure:"server"`
 	Username            string              `mapstructure:"username"`
-	Granularity         string              `mapstructure:"granularity"`
+	Granularity         uint                `mapstructure:"granularity"`
 	MaxQuerySampleCount uint                `mapstructure:"max_query_sample_count"`
 	TopQueryCount       uint                `mapstructure:"top_query_count"`
 }

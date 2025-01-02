@@ -35,7 +35,7 @@ type sqlServerScraperHelper struct {
 	id                  component.ID
 	sqlQuery            string
 	maxQuerySampleCount uint
-	granularity         string
+	granularity         uint
 	topQueryCount       uint
 	instanceName        string
 	scrapeCfg           scraperhelper.ControllerConfig
@@ -54,7 +54,7 @@ var _ scraper.Metrics = (*sqlServerScraperHelper)(nil)
 func newSQLServerScraper(id component.ID,
 	query string,
 	maxQuerySampleCount uint,
-	granularity string,
+	granularity uint,
 	topQueryCount uint,
 	instanceName string,
 	scrapeCfg scraperhelper.ControllerConfig,
