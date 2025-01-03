@@ -24,37 +24,37 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest/pmetrictest"
 )
 
-func enableAllScraperMetrics(cfg *Config) {
+func enableAllScraperMetrics(cfg *Config, enabled bool) {
 	// Some of these metrics are enabled by default, but it's still helpful to include
 	// in the case of using a config that may have previously disabled a metric.
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchRequestRate.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLCompilationRate.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLRecompilationRate.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchRequestRate.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLCompilationRate.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLRecompilationRate.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseCount.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseIo.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseLatency.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseOperations.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseCount.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseIo.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseLatency.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverDatabaseOperations.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverLockWaitRate.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverLockWaitRate.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverPageBufferCacheHitRatio.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverPageBufferCacheHitRatio.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverProcessesBlocked.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverProcessesBlocked.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverResourcePoolDiskThrottledReadRate.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverResourcePoolDiskThrottledWriteRate.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverResourcePoolDiskThrottledReadRate.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverResourcePoolDiskThrottledWriteRate.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverUserConnectionCount.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverUserConnectionCount.Enabled = enabled
 
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = true
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled = true
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = enabled
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled = enabled
 }
 
 func TestEmptyScrape(t *testing.T) {
@@ -68,20 +68,8 @@ func TestEmptyScrape(t *testing.T) {
 
 	// Ensure there aren't any scrapers when all metrics are disabled.
 	// Disable all metrics manually that are enabled by default
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchRequestRate.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverPageBufferCacheHitRatio.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverLockWaitRate.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLRecompilationRate.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverBatchSQLCompilationRate.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverUserConnectionCount.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryExecutionCount.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalElapsedTime.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalGrantKb.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalReads.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalLogicalWrites.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalPhysicalReads.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = false
-	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalWorkerTime.Enabled = false
+	enableAllScraperMetrics(cfg, false)
+
 	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
 	assert.Empty(t, scrapers)
 }
@@ -95,7 +83,7 @@ func TestSuccessfulScrape(t *testing.T) {
 	cfg.MetricsBuilderConfig.ResourceAttributes.SqlserverInstanceName.Enabled = true
 	assert.NoError(t, cfg.Validate())
 
-	enableAllScraperMetrics(cfg)
+	enableAllScraperMetrics(cfg, true)
 
 	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
 	assert.NotEmpty(t, scrapers)
@@ -109,7 +97,7 @@ func TestSuccessfulScrape(t *testing.T) {
 			instanceName:        scraper.instanceName,
 			SQL:                 scraper.sqlQuery,
 			maxQuerySampleCount: 10000,
-			granularity:         "",
+			granularity:         10,
 		}
 
 		actualMetrics, err := scraper.ScrapeMetrics(context.Background())
@@ -150,7 +138,7 @@ func TestScrapeInvalidQuery(t *testing.T) {
 
 	assert.NoError(t, cfg.Validate())
 
-	enableAllScraperMetrics(cfg)
+	enableAllScraperMetrics(cfg, true)
 	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
 	assert.NotNil(t, scrapers)
 
@@ -180,7 +168,9 @@ func TestScrapeCacheAndDiff(t *testing.T) {
 
 	assert.NoError(t, cfg.Validate())
 
-	enableAllScraperMetrics(cfg)
+	enableAllScraperMetrics(cfg, false)
+	cfg.MetricsBuilderConfig.Metrics.SqlserverQueryTotalRows.Enabled = true
+
 	scrapers := setupSQLServerScrapers(receivertest.NewNopSettings(), cfg)
 	assert.NotNil(t, scrapers)
 
@@ -235,7 +225,7 @@ type mockClient struct {
 	SQL                 string
 	instanceName        string
 	maxQuerySampleCount uint
-	granularity         string
+	granularity         uint
 }
 
 func readFile(fname string) ([]sqlquery.StringMap, error) {
