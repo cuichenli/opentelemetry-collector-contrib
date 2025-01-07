@@ -375,7 +375,7 @@ func getSQLServerQueryMetricsQuery(instanceName string, maxQuerySampleCount uint
 	granularityStatement = fmt.Sprintf(granularityDeclaration, granularity)
 
 	if instanceName != "" {
-		instanceNameClause = fmt.Sprintf("AND @@SERVERNAME = ''%s''", instanceName)
+		instanceNameClause = fmt.Sprintf("AND @@SERVERNAME = '%s'", instanceName)
 	} else {
 		instanceNameClause = ""
 	}
