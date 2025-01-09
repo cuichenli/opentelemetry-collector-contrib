@@ -384,7 +384,7 @@ func (s *sqlServerScraperHelper) recordQueryMetrics(ctx context.Context, topQuer
 		rb.SetSqlserverQueryHash(queryHashVal)
 		rb.SetSqlserverQueryPlanHash(queryPlanHashVal)
 		rb.SetSqlserverQueryPlanHandle(hex.EncodeToString([]byte(row[queryPlanHandle])))
-		s.logger.Info(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, queryPlanHashVal, queryHashVal))
+		s.logger.Debug(fmt.Sprintf("DataRow: %v, PlanHash: %v, Hash: %v", row, queryPlanHashVal, queryHashVal))
 
 		timeStamp := pcommon.NewTimestampFromTime(time.Now())
 
