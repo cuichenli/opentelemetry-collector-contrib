@@ -47,6 +47,8 @@ type sqlServerScraperHelper struct {
 	db                  *sql.DB
 	mb                  *metadata.MetricsBuilder
 	cache               *lru.Cache[string, float64]
+	lastExecutionTime   time.Time
+	minimumInterval     time.Duration
 }
 
 var _ scraper.Metrics = (*sqlServerScraperHelper)(nil)
@@ -64,6 +66,7 @@ func newSQLServerScraper(id component.ID,
 	clientProviderFunc sqlquery.ClientProviderFunc,
 	mb *metadata.MetricsBuilder,
 	cache *lru.Cache[string, float64],
+	minimumInterval time.Duration,
 ) *sqlServerScraperHelper {
 	return &sqlServerScraperHelper{
 		id:                  id,
@@ -79,6 +82,8 @@ func newSQLServerScraper(id component.ID,
 		clientProviderFunc:  clientProviderFunc,
 		mb:                  mb,
 		cache:               cache,
+		lastExecutionTime:   time.UnixMilli(0),
+		minimumInterval:     minimumInterval,
 	}
 }
 
@@ -100,6 +105,11 @@ func (s *sqlServerScraperHelper) Start(context.Context, component.Host) error {
 func (s *sqlServerScraperHelper) ScrapeMetrics(ctx context.Context) (pmetric.Metrics, error) {
 	var err error
 
+	if !s.lastExecutionTime.Add(s.minimumInterval).Before(time.Now()) {
+		s.logger.Debug("SQLServerScraperHelper: Scraper is called before the minimum interval has passed.", zap.String("query", s.sqlQuery))
+		return s.mb.Emit(), nil
+	}
+	s.lastExecutionTime = time.Now()
 	switch s.sqlQuery {
 	case getSQLServerQueryMetricsQuery(s.instanceName, s.maxQuerySampleCount, s.granularity):
 		err = s.recordQueryMetrics(ctx, s.topQueryCount)

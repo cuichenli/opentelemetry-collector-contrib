@@ -116,6 +116,7 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 
 		var cache *lru.Cache[string, float64]
 		var err error
+		var minimumInterval time.Duration = 0
 
 		if query == getSQLServerQueryMetricsQuery(cfg.InstanceName, cfg.MaxQuerySampleCount, cfg.Granularity) {
 			cache, err = lru.New[string, float64](10000 * 10)
@@ -136,7 +137,9 @@ func setupSQLServerScrapers(params receiver.Settings, cfg *Config) []*sqlServerS
 			dbProviderFunc,
 			sqlquery.NewDbClient,
 			metadata.NewMetricsBuilder(cfg.MetricsBuilderConfig, params),
-			cache)
+			cache,
+			minimumInterval,
+		)
 
 		scrapers = append(scrapers, sqlServerScraper)
 	}
